@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["rsaitehu-pointcloud"]
+include = ["rsaitehu_pointcloud"]
 namespaces = true
 
 [project]
