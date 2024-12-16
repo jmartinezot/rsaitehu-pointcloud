@@ -10,12 +10,10 @@ Welcome to rsaitehu_pointcloud's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-   modules
-
 Module Reference
 ================
 
-.. automodule:: pointcloud
+.. automodule:: main
    :members:
    :undoc-members:
    :show-inheritance:
