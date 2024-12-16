@@ -11,7 +11,7 @@ namespaces = true
 
 [project]
 name = "rsaitehu-pointcloud"
-version = "0.0.2"
+version = "0.0.3"
 authors = [
   { name="José María Martínez Otzeta", email="jmartinezot@gmail.com" },
 ]
