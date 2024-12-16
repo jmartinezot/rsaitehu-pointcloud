@@ -1,35 +1,28 @@
-RSAITEHU-pointcloud Documentation
-=================================
+.. rsaitehu_pointcloud documentation master file, created by
+   sphinx-quickstart on Mon Dec 16 16:02:14 2024.
+   You can adapt this file completely to your liking, but it should at least
+   contain the root `toctree` directive.
 
-Welcome to RSAITEHU-pointcloud's documentation! This guide covers the modules and functions available in the RSAITEHU-pointcloud package, providing detailed explanations and examples for developers and users.
-
-Contents
-========
+Welcome to rsaitehu_pointcloud's documentation!
+===============================================
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
-   rsaitehu_pointcloud
+   modules
 
-Pointcloud Module
-=================
+Module Reference
+================
 
-The `pointcloud` module provides tools for processing and analyzing point cloud data. It includes functions for cleaning, auditing, and transforming point clouds to fit specific requirements.
-
-.. automodule:: rsaitehu_pointcloud
+.. automodule:: pointcloud
    :members:
+   :undoc-members:
+   :show-inheritance:
 
-   .. autosummary::
-      :toctree: generated
-      
-      get_pointcloud_after_substracting_point_cloud
-      pointcloud_audit
-      pointcloud_sanitize
-
-Indices and Tables
+Indices and tables
 ==================
 
 * :ref:`genindex`
 * :ref:`modindex`
-
+* :ref:`search`
