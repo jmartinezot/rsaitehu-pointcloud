@@ -15,7 +15,7 @@ import sphinx_rtd_theme
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath('../rsaitehu-pointcloud'))
+sys.path.insert(0, os.path.abspath('../../rsaitehu-pointcloud'))
 sys.path.insert(0, os.path.abspath('../..'))  # Source code dir relative to this file
 
 def setup(app):
