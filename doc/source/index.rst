@@ -10,14 +10,14 @@ Contents
    :maxdepth: 2
    :caption: Contents:
 
-   pointcloud
+   rsaitehu_pointcloud
 
 Pointcloud Module
 =================
 
 The `pointcloud` module provides tools for processing and analyzing point cloud data. It includes functions for cleaning, auditing, and transforming point clouds to fit specific requirements.
 
-.. automodule:: pointcloud
+.. automodule:: rsaitehu_pointcloud
    :members:
 
    .. autosummary::
