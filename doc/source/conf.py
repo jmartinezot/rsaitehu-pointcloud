@@ -21,7 +21,10 @@ release = '0.0.1'
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.napoleon',  # For Google or NumPy docstrings
-    'sphinx.ext.viewcode',
+    "sphinx_rtd_theme",
+    #'sphinx.ext.viewcode',
+    'sphinx.ext.autosummary',
+    #'sphinx.ext.todo', 'sphinx.ext.viewcode', 'sphinx.ext.autodoc', 'sphinx.ext.imgmath', 'sphinx_automodapi.automodapi', 'sphinx.ext.ifconfig'
 ]
 
 
@@ -35,3 +38,10 @@ add_module_names = False
 
 html_theme = 'sphinx_rtd_theme'
 html_static_path = ['_static']
+
+# Display function signatures with docstrings
+autosummary_generate = True
+autodoc_docstring_signature = True
+autodoc_member_order = "bysource"
+autodoc_inherit_docstrings = True
+
