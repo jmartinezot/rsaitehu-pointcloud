@@ -16,15 +16,6 @@ Indices and tables
    pointcloud_module_doc
    main
 
-API Reference
-=============
-
-.. automodule:: main
-   :members:
-   :undoc-members:
-   :show-inheritance:
-   :noindex:
-
 Indices and tables
 ==================
 
