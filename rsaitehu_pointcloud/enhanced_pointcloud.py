@@ -1,6 +1,7 @@
 import open3d as o3d
 import numpy as np
 from typing import Dict, Any
+from copy import deepcopy
 from .main import pointcloud_audit, get_pointcloud_after_subtracting_point_cloud
 
 class EnhancedPointCloud:
@@ -90,21 +91,32 @@ class EnhancedPointCloud:
             raise ValueError("The point cloud is empty.")
 
         planes = []
-        remaining_pcd = self.pcd
-        original_indices = np.arange(len(self.pcd.points))
+        remaining_pcd = deepcopy(self.pcd)  # Clone the point cloud
+        original_indices = np.arange(len(self.pcd.points))  # Track indices in the original point cloud
 
-        for _ in range(num_planes):
+        for i in range(num_planes):
             if remaining_pcd.is_empty():
-                print("Warning: The point cloud became empty during segmentation.")
+                print(f"Segmentation stopped early. Remaining point cloud is empty after {i} planes.")
                 break
 
+            # Segment a plane from the remaining point cloud
             plane_model, inliers = remaining_pcd.segment_plane(
                 distance_threshold=distance_threshold,
                 ransac_n=ransac_n,
                 num_iterations=num_iterations
             )
-            planes.append((plane_model, original_indices[inliers].tolist()))
+            print(f"Plane {i+1}: {len(inliers)} inliers.")
+
+            # Map the inliers back to the original point cloud using original_indices
+            original_inliers = original_indices[inliers]
+
+            # Store the plane model and inliers in terms of the original point cloud
+            planes.append((plane_model, original_inliers.tolist()))
+
+            # Update remaining_pcd by excluding inliers
             remaining_pcd = remaining_pcd.select_by_index(inliers, invert=True)
-            original_indices = original_indices[np.setdiff1d(np.arange(len(original_indices)), inliers)]
+
+            # Update original_indices by excluding the inliers
+            original_indices = np.delete(original_indices, inliers)
 
         return planes
