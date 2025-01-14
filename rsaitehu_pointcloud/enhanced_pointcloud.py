@@ -2,7 +2,7 @@ import open3d as o3d
 import numpy as np
 from typing import Dict, Any
 from copy import deepcopy
-from .main import pointcloud_audit, get_pointcloud_after_subtracting_point_cloud
+from .main import pointcloud_audit, get_pointcloud_after_subtracting_point_cloud, split_pointcloud_by_plane
 
 class EnhancedPointCloud:
     def __init__(self, pcd: o3d.geometry.PointCloud):
@@ -120,3 +120,24 @@ class EnhancedPointCloud:
             original_indices = np.delete(original_indices, inliers)
 
         return planes
+    
+    def split_by_plane(self, plane: tuple) -> Dict[str, o3d.geometry.PointCloud]:
+        """
+        Split the point cloud by a plane.
+
+        This function splits the point cloud into two parts: the positive side of the plane and the negative side of the plane.
+
+        :param plane: A tuple (a, b, c, d) representing the plane equation ax + by + cz + d = 0.
+        :type plane: tuple
+        :return: A tuple containing the positive side point cloud and the negative side point cloud.
+        :rtype: Tuple[o3d.geometry.PointCloud, o3d.geometry.PointCloud]
+
+        :Example:
+
+        >>> import open3d as o3d
+        >>> pcd = o3d.io.read_point_cloud("example.ply")
+        >>> enhanced_pcd = EnhancedPointCloud(pcd)
+        >>> positive_pcd, negative_pcd = enhanced_pcd.split_by_plane((1, 1, -1, -1))
+        """
+        return split_pointcloud_by_plane(self.pcd, plane)
+

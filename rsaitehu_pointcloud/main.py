@@ -172,3 +172,81 @@ def get_pointcloud_after_subtracting_point_cloud(pcd: o3d.geometry.PointCloud, s
     pcd_result.points = o3d.utility.Vector3dVector(np.asarray(remaining_points))
     pcd_result.colors = o3d.utility.Vector3dVector(np.asarray(remaining_colors))
     return pcd_result
+
+def split_pointcloud_by_plane(pointcloud, plane):
+    """
+    Splits a point cloud into two point clouds based on a plane. Points are divided into two clouds
+    depending on which side of the plane they lie. Colors and normals are preserved in the resulting point clouds.
+
+    :param pointcloud: The input point cloud to be split.
+    :type pointcloud: o3d.geometry.PointCloud
+    :param plane: A tuple (a, b, c, d) representing the plane equation ax + by + cz + d = 0.
+    :type plane: tuple
+    :return: A tuple of two point clouds:
+             - The first contains points on the positive side of the plane.
+             - The second contains points on the negative or coincident side of the plane.
+    :rtype: tuple(o3d.geometry.PointCloud, o3d.geometry.PointCloud)
+
+    :Example:
+
+    .. code-block:: python
+
+        >>> import open3d as o3d
+        >>> import numpy as np
+        >>> # Load a point cloud
+        >>> office_dataset = o3d.data.OfficePointClouds()
+        >>> office_filename = office_dataset.paths[0]
+        >>> pcd = o3d.io.read_point_cloud(office_filename)
+        >>> # Define a plane (e.g., x + y - z - 1 = 0 -> a=1, b=1, c=-1, d=-1)
+        >>> plane = (1, 1, -1, -1)
+        >>> # Split the point cloud
+        >>> positive_pcd, negative_pcd = split_pointcloud_by_plane(pcd, plane)
+        >>> # Visualize the result
+        >>> o3d.visualization.draw_geometries([positive_pcd], window_name="Positive Side")
+        >>> o3d.visualization.draw_geometries([negative_pcd], window_name="Negative Side")
+
+    The function performs the following steps:
+
+    - Computes the distance of each point in the input point cloud from the plane using the plane equation.
+    - Points with a positive distance are added to the first output point cloud.
+    - Points with a non-positive distance are added to the second output point cloud.
+    - Returns the two resulting point clouds.
+
+    """
+    # Extract plane parameters
+    a, b, c, d = plane
+    normal = np.array([a, b, c])
+    
+    # Convert point cloud to numpy arrays
+    points = np.asarray(pointcloud.points)
+    colors = np.asarray(pointcloud.colors) if pointcloud.has_colors() else None
+    normals = np.asarray(pointcloud.normals) if pointcloud.has_normals() else None
+    
+    # Calculate the distance of each point from the plane
+    distances = np.dot(points, normal) + d
+    
+    # Split points based on their distance to the plane
+    positive_indices = distances > 0
+    negative_indices = distances <= 0
+    
+    positive_points = points[positive_indices]
+    negative_points = points[negative_indices]
+    
+    # Create point clouds for each side
+    positive_pointcloud = o3d.geometry.PointCloud()
+    negative_pointcloud = o3d.geometry.PointCloud()
+    positive_pointcloud.points = o3d.utility.Vector3dVector(positive_points)
+    negative_pointcloud.points = o3d.utility.Vector3dVector(negative_points)
+    
+    # Add colors if they exist
+    if colors is not None:
+        positive_pointcloud.colors = o3d.utility.Vector3dVector(colors[positive_indices])
+        negative_pointcloud.colors = o3d.utility.Vector3dVector(colors[negative_indices])
+    
+    # Add normals if they exist
+    if normals is not None:
+        positive_pointcloud.normals = o3d.utility.Vector3dVector(normals[positive_indices])
+        negative_pointcloud.normals = o3d.utility.Vector3dVector(normals[negative_indices])
+
+    # return dictionary of positive and negative point clouds
+    return {"positive": positive_pointcloud, "negative": negative_pointcloud}
