@@ -3,6 +3,7 @@ import numpy as np
 from typing import Dict, Any
 from copy import deepcopy
 from .main import pointcloud_audit, get_pointcloud_after_subtracting_point_cloud, split_pointcloud_by_plane
+from .main import segment_planes
 
 class EnhancedPointCloud:
     def __init__(self, pcd: o3d.geometry.PointCloud):
@@ -39,6 +40,15 @@ class EnhancedPointCloud:
         """
         result_pcd = get_pointcloud_after_subtracting_point_cloud(self.pcd, other.pcd, self.subtraction_threshold)
         return EnhancedPointCloud(result_pcd)
+    
+    def get_point_cloud(self) -> o3d.geometry.PointCloud:
+        """
+        Get the point cloud.
+
+        :return: The point cloud.
+        :rtype: o3d.geometry.PointCloud
+        """
+        return self.pcd
 
     def set_subtraction_threshold(self, threshold: float):
         """
@@ -78,48 +88,15 @@ class EnhancedPointCloud:
         :Example:
 
         >>> import open3d as o3d
+        >>> from rsaitehu_pointcloud import segment_planes
         >>> pcd = o3d.io.read_point_cloud("example.ply")
         >>> enhanced_pcd = EnhancedPointCloud(pcd)
-        >>> planes = enhanced_pcd.segment_planes(num_planes=2)
+        >>> planes = segment_planes(num_planes=2)
         >>> for plane_model, inliers in planes:
         >>>     print("Plane model:", plane_model)
         >>>     print("Number of inliers:", len(inliers))
         """
-        if num_planes <= 0:
-            raise ValueError("The number of planes must be greater than zero.")
-        if self.pcd.is_empty():
-            raise ValueError("The point cloud is empty.")
-
-        planes = []
-        remaining_pcd = deepcopy(self.pcd)  # Clone the point cloud
-        original_indices = np.arange(len(self.pcd.points))  # Track indices in the original point cloud
-
-        for i in range(num_planes):
-            if remaining_pcd.is_empty():
-                print(f"Segmentation stopped early. Remaining point cloud is empty after {i} planes.")
-                break
-
-            # Segment a plane from the remaining point cloud
-            plane_model, inliers = remaining_pcd.segment_plane(
-                distance_threshold=distance_threshold,
-                ransac_n=ransac_n,
-                num_iterations=num_iterations
-            )
-            print(f"Plane {i+1}: {len(inliers)} inliers.")
-
-            # Map the inliers back to the original point cloud using original_indices
-            original_inliers = original_indices[inliers]
-
-            # Store the plane model and inliers in terms of the original point cloud
-            planes.append((plane_model, original_inliers.tolist()))
-
-            # Update remaining_pcd by excluding inliers
-            remaining_pcd = remaining_pcd.select_by_index(inliers, invert=True)
-
-            # Update original_indices by excluding the inliers
-            original_indices = np.delete(original_indices, inliers)
-
-        return planes
+        return segment_planes(self.pcd, num_planes, distance_threshold, ransac_n, num_iterations)
     
     def split_by_plane(self, plane: tuple) -> Dict[str, o3d.geometry.PointCloud]:
         """

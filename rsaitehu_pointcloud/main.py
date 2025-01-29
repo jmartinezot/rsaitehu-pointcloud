@@ -1,6 +1,7 @@
 import open3d as o3d
 from typing import List, Tuple, Dict, Any
 import numpy as np
+from copy import deepcopy
 
 def pointcloud_audit(pcd: o3d.geometry.PointCloud) -> Dict[str, Any]:
     '''
@@ -172,6 +173,113 @@ def get_pointcloud_after_subtracting_point_cloud(pcd: o3d.geometry.PointCloud, s
     pcd_result.points = o3d.utility.Vector3dVector(np.asarray(remaining_points))
     pcd_result.colors = o3d.utility.Vector3dVector(np.asarray(remaining_colors))
     return pcd_result
+
+def segment_planes(pcd: o3d.geometry.PointCloud, num_planes: int, distance_threshold: float = 0.01, ransac_n: int = 3, num_iterations: int = 1000):
+    """
+    Segments planes from the point cloud.
+
+    This function segments a specified number of planes from the point cloud using the RANSAC algorithm.
+
+    :param pcd: Point cloud to segment.
+    :type pcd: o3d.geometry.PointCloud
+    :param num_planes: Number of planes to segment.
+    :type num_planes: int
+    :param distance_threshold: Maximum distance a point can have to an estimated plane to be considered an inlier.
+    :type distance_threshold: float
+    :param ransac_n: Number of points to sample for generating a plane model.
+    :type ransac_n: int
+    :param num_iterations: Number of iterations to run RANSAC.
+    :type num_iterations: int
+    :return: List of tuples containing the plane model and the inliers' indices in the original point cloud.
+    :rtype: List[Tuple[np.ndarray, List[int]]]
+
+    :Example:
+
+    .. code-block:: python
+
+        >>> import open3d as o3d
+        >>> pcd = o3d.io.read_point_cloud("example.ply")
+        >>> enhanced_pcd = EnhancedPointCloud(pcd)
+        >>> planes = segment_planes(num_planes=2)
+        >>> for plane_model, inliers in planes:
+        >>>     print("Plane model:", plane_model)
+        >>>     print("Number of inliers:", len(inliers))
+    """
+    if num_planes <= 0:
+        raise ValueError("The number of planes must be greater than zero.")
+    if pcd.is_empty():
+        raise ValueError("The point cloud is empty.")
+
+    planes = []
+    remaining_pcd = deepcopy(pcd)  # Clone the point cloud
+    original_indices = np.arange(len(pcd.points))  # Track indices in the original point cloud
+
+    for i in range(num_planes):
+        if remaining_pcd.is_empty():
+            print(f"Segmentation stopped early. Remaining point cloud is empty after {i} planes.")
+            break
+
+        # Segment a plane from the remaining point cloud
+        plane_model, inliers = remaining_pcd.segment_plane(
+            distance_threshold=distance_threshold,
+            ransac_n=ransac_n,
+            num_iterations=num_iterations
+        )
+        print(f"Plane {i+1}: {len(inliers)} inliers.")
+
+        # Map the inliers back to the original point cloud using original_indices
+        original_inliers = original_indices[inliers]
+
+        # Store the plane model and inliers in terms of the original point cloud
+        planes.append((plane_model, original_inliers.tolist()))
+
+        # Update remaining_pcd by excluding inliers
+        remaining_pcd = remaining_pcd.select_by_index(inliers, invert=True)
+
+        # Update original_indices by excluding the inliers
+        original_indices = np.delete(original_indices, inliers)
+
+    return planes
+
+def get_pcd_surrounding_plane(pcd: o3d.geometry.PointCloud, plane: tuple, distance_threshold: float = 0.01) -> o3d.geometry.PointCloud:
+    """
+    Get the point cloud surrounding a plane.
+
+    This function returns the point cloud surrounding a plane within a specified distance threshold.
+
+    :param plane: A tuple (a, b, c, d) representing the plane equation ax + by + cz + d = 0.
+    :type plane: tuple
+    :param distance_threshold: Maximum distance a point can have to the plane to be considered surrounding.
+    :type distance_threshold: float
+    :return: The point cloud surrounding the plane.
+    :rtype: o3d.geometry.PointCloud
+
+    :Example:
+
+    >>> import open3d as o3d
+    >>> pcd = o3d.io.read_point_cloud("example.ply")
+    >>> enhanced_pcd = EnhancedPointCloud(pcd)
+    >>> surrounding_pcd = enhanced_pcd.get_pcd_surrounding_plane((1, 1, -1, -1))
+    """
+    if pcd.is_empty():
+        raise ValueError("The point cloud is empty.")
+
+    # Extract the plane coefficients
+    a, b, c, d = plane
+
+    # Convert point cloud to NumPy array
+    points = np.asarray(self.pcd.points)
+
+    # Compute the signed distance of each point to the plane
+    distances = np.abs(a * points[:, 0] + b * points[:, 1] + c * points[:, 2] + d) / np.sqrt(a**2 + b**2 + c**2)
+
+    # Select points within the distance threshold
+    surrounding_indices = np.where(distances <= distance_threshold)[0]
+
+    # Extract the surrounding point cloud
+    surrounding_pcd = pcd.select_by_index(surrounding_indices)
+
+    return surrounding_pcd
 
 def split_pointcloud_by_plane(pointcloud, plane):
     """
